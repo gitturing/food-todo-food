@@ -2,6 +2,7 @@ package edu.example.food.controller;
 
 import edu.example.food.dto.DTOCliente;
 import edu.example.food.service.ClienteService;
+import edu.example.food.service.ClienteServiceKafka;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 public class ClienteController {
 
     private ClienteService clienteService;
+    private ClienteServiceKafka  clienteServiceKafka;
 
     @GetMapping("/v1/cliente/{id}")
     public Mono<DTOCliente> consultarClienteId(@PathVariable Integer id) {
@@ -39,4 +41,11 @@ public class ClienteController {
         return clienteService.deleteById(id);
     }
 
+    @GetMapping("/topico-kafka/{topico}")
+    public Mono<String> obtenerClientesDesdeKafkaContrpller(@PathVariable String topico){
+        return clienteServiceKafka.obtenerClientesDesdeKafka(topico)
+                .flatMap(cliente -> clienteService.crearCliente(cliente))
+                .then()
+                .map(unused -> "Clientes alamacenado ok desde kafka");
+    }
 }
